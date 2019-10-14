@@ -6,47 +6,31 @@
 
 using namespace std;
 
-struct Patient{
-    int index;
-    vector<string> var;
-};
-
-
 string remove_quotes(string s){
     int n = s.size();
     return(s.substr(1,n-1));
 }
 
-void read_file(string filename){
+vector<vector<string> > read_file(string filename){
     fstream file;
     string word = "";
     string line = "";
     file.open(filename.c_str()); 
-    int count=0;
-    int i=0;
-    vector<Patient> Patient_list;
+    vector<vector<string> > patient_list;
     // extracting words from the file 
     while (getline(file,line)) 
     { 
         // displaying content
-        count=0;
-        Patient p;
-        p.index = i;
+        vector<string> p;
         istringstream iss(line);
 
-        // p.var.push_back(remove_quotes(word));
         while(iss>>word){
-            if(count==0)
-                cout<<word<<endl;
-            p.var.push_back(remove_quotes(word));
-            count++;
+            p.push_back(remove_quotes(word));
         }
         
-        Patient_list.push_back(p);
-        cout <<i<<"size: "<<count<<endl;;
-        i++;
+        patient_list.push_back(p);
     } 
-    return;
+    return patient_list;
 }
 
 
@@ -54,6 +38,7 @@ void read_file(string filename){
 int main()
 {
     string filename = "records.dat";
-    read_file(filename);
+    vector<vector<string> > patient_list = read_file(filename);
+    cout<<patient_list.size()<<"  "<<patient_list[0].size()<<endl;
     return 0;
 }
