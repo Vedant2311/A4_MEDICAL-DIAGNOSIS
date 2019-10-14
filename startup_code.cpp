@@ -265,7 +265,8 @@ int main()
         int count=0;
         for(listIt=Alarm.begin();listIt!=Alarm.end();listIt++)
         {
-            if(listIt->get_Parents().size()==0) roots.push_back();
+            if(listIt->get_Parents().size()==0) roots.push_back(count);
+		count ++;
         }
         
 }
