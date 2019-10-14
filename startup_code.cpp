@@ -259,9 +259,15 @@ int main()
 	network Alarm;
 	Alarm=read_network();
     
-// Example: to do something
-	cout<<"Perfect! Hurrah! \n";
+	vector<int> roots;
 	
+	list<Graph_Node>::iterator listIt;
+        int count=0;
+        for(listIt=Alarm.begin();listIt!=Alarm.end();listIt++)
+        {
+            if(listIt->get_Parents().size()==0) roots.push_back();
+        }
+        
 }
 
 
