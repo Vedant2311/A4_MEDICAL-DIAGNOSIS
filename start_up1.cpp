@@ -11,6 +11,7 @@
 using namespace std;
 
 vector<vector<int> > unknowns;
+vector<vector<string> > patient_list;
 // Our graph consists of a list of nodes where each node is represented as follows:
 class Graph_Node{
 
@@ -140,6 +141,23 @@ public:
             cout<<"node not found\n";
         return listIt;
     }
+
+    int search_index(string val_name)
+    {
+        list<Graph_Node>::iterator listIt;
+        int index=0;
+        for(listIt=Pres_Graph.begin();listIt!=Pres_Graph.end();listIt++)
+        {
+            if(listIt->get_name().compare(val_name)==0)
+                return index;
+            index++;
+        }
+    
+            cout<<"node not found\n";
+        return -1;
+    }
+
+
 	
 
 };
@@ -265,14 +283,37 @@ int main()
 
     vector<int> roots;
     
-    list<Graph_Node>::iterator listIt;
-    int count=0;
-    for(listIt=Alarm.begin();listIt!=Alarm.end();listIt++)
-    {
-        if(listIt->get_Parents().size()==0) roots.push_back(count);
-    count ++;
-    }
+    // list<Graph_Node>::iterator listIt;
+    // int count=0;
+    // for(listIt=Alarm.begin();listIt!=Alarm.end();listIt++)
+    // {
+    //     if(listIt->get_Parents().size()==0) roots.push_back(count);
+    // count ++;
+    // }
 	
+}
+
+int get_index_val(vector<string> v, string s){
+    for(int i=0 ;i<v.size(); i++){
+        if(s.compare(v[i])==0)
+            return i;
+    }
+    return -1;
+}
+
+
+int find_row(vector<int> entry, vector<Graph_Node> parents){
+    int row = 0;
+    int temp = 0;
+
+    for(int i=0; i<entry.size(); i++){
+        temp = entry[i];
+        for(int j=i+1; j<entry.size(); j++){
+            temp = temp*(parents[j].get_nvalues());
+        }
+        row = row + temp;
+    }
+    return row;
 }
 
 
@@ -282,6 +323,7 @@ void find_cpt(network &Alarm, int ind){
 
     vector<string> parent_str = gn.get_Parents();
     vector<Graph_Node> parents;
+    vector<int> parent_index;
 
     int m = gn.get_nvalues();
     int n = 1;
@@ -289,16 +331,45 @@ void find_cpt(network &Alarm, int ind){
     for(int i=0; i<parent_str.size(); i++){
         list<Graph_Node>::iterator temp = Alarm.search_node(parent_str[i]);
         parents.push_back(*temp);
+        parent_index.push_back(Alarm.search_index((*temp).get_name()));
         n = n*((*temp).get_nvalues());
     }
 
-    int[m][n] cpt_values;
+    int cpt_values[n][m+1];
+    for(int i=0; i<n; i++){
+        for(int j=0; j<m+1; j++)
+            cpt_values[i][j] = 0;
+    }
+    vector<int> entry;
+    int x=0; 
+    int y=0;
+    for(int i=0; i<patient_list.size(); i++){
+        for(int j=0; j<parent_index.size(); j++){
+            vector<string> values_list = parents[j].get_values();
+            int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
+            if(var_numb<0){
+                //call function to store "?"
+                break;
+            }
+            entry.push_back(var_numb);
+        }
+        x = find_row(entry, parents);
+        y = get_index_val(gn.get_values(),patient_list[i][ind]);
+        cpt_values[x][y]++;
+        cpt_values[x][m]++;
+    }
 
-    
-    
+    vector<float> cpt_list;
+    for(int i=0; i<patient_list.size(); i++){
+        for(int j=0; j<patient_list[0].size(); j++){
+            float d = cpt_values[i][j]/cpt_values[i][m];
+            cout<<ind<<" d "<<d<<endl;
+            cpt_list.push_back(d);
+        }
+    }
 
+    gn.set_CPT(cpt_list);
 }
-
 
 
 
