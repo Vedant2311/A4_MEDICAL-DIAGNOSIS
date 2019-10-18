@@ -361,7 +361,7 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
     return;
 }
 
-void find_cpt(network &Alarm, int ind){
+void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     list<Graph_Node>::iterator it = Alarm.get_nth_node(ind);
     Graph_Node gn = (*it);
 
@@ -382,7 +382,7 @@ void find_cpt(network &Alarm, int ind){
     float cpt_values[n][m+1];
     for(int i=0; i<n; i++){
         for(int j=0; j<m+1; j++)
-            cpt_values[i][j] = 0;
+            cpt_values[i][j] = 0.0;
     }
     vector<int> entry;
     int x=0; 
@@ -457,9 +457,48 @@ void find_cpt(network &Alarm, int ind){
         }
     }
 
-    gn.set_CPT(cpt_list);
+    (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
 }
 
+void replace_unknowns(network &Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list){
+    vector<float> cpt_list = gn.get_CPT();
 
+    vector<string> parent_str = gn.get_Parents();
+    vector<Graph_Node> parents;
+    vector<int> parent_index;
+
+    int m = gn.get_nvalues();
+    int n = 1;
+
+    for(int i=0; i<parent_str.size(); i++){
+        list<Graph_Node>::iterator temp = Alarm.search_node(parent_str[i]);
+        parents.push_back(*temp);
+        parent_index.push_back(Alarm.search_index((*temp).get_name()));
+        n = n*((*temp).get_nvalues());
+    }
+
+    vector<int> entry;
+
+    for(int i=0; i<patient_list.size(); i++){
+        if(patient_list[i][ind].compare("?")){
+            for(int j=0; j<parent_index.size(); j++){
+                vector<string> values_list = parents[j].get_values();
+                int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
+                if(var_numb<0){
+                    break;
+                } 
+                entry.push_back(var_numb);
+            }
+            int x = find_row(entry, parents);
+            x = x*m;
+            string input_s="";
+            for(int k=0; k<m; k++){
+                input_s = input_s + gn.get_values()[k] + " = " + to_string(cpt_list[x+k]) + " ";
+            }
+            patient_list[i][ind] = input_s;
+        }
+    }
+    return;
+}
 
 // "low = 0.4 medium = 0.3 high = 0.3"
