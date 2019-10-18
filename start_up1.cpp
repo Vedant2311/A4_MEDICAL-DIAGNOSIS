@@ -10,8 +10,14 @@
 // Format checker just assumes you have Alarm.bif and Solved_Alarm.bif (your file) in current directory
 using namespace std;
 
-vector<vector<int> > unknowns;
+struct unknowns{
+    int row;
+    int colm;
+};
+
+vector<unknowns> unknowns_list;
 vector<vector<string> > patient_list;
+
 // Our graph consists of a list of nodes where each node is represented as follows:
 class Graph_Node{
 
@@ -280,6 +286,7 @@ int main()
     
 // Example: to do something
 	cout<<"Perfect! Hurrah! \n";
+    cout<<stof("20.356647232")<<endl;
 
     vector<int> roots;
     
@@ -301,6 +308,23 @@ int get_index_val(vector<string> v, string s){
     return -1;
 }
 
+bool has_space(string str){
+    for (auto x : str) 
+   { 
+       if (x == ' ') 
+        return true;
+   }
+   return false;
+}
+
+int check_prob_val(vector<string> values, vector<int> index){
+    for(int i=0; i<index.size(); i++){
+        if(has_space(values[index[i]]))
+            return i;
+    }
+    return -1;
+    //returns the index of parent in this node's list who prev had a "?"
+}
 
 int find_row(vector<int> entry, vector<Graph_Node> parents){
     int row = 0;
@@ -316,6 +340,26 @@ int find_row(vector<int> entry, vector<Graph_Node> parents){
     return row;
 }
 
+void get_var_val(string s, vector<string> &var, vector<float> &val){
+    string temp = "";
+    float value=0;
+    int start=0;
+    for(int i=0; i<s.size(); i++){
+        if(s[i]==' '){
+            temp = s.substr(start,i);
+            start = i+3;
+            i = start;
+            while(s[i]!=' ')
+                i++;
+            value = stof(s.substr(start,i));
+            var.push_back(temp);
+            val.push_back(value);
+        }
+        i++;
+        start = i;
+    }
+    return;
+}
 
 void find_cpt(network &Alarm, int ind){
     list<Graph_Node>::iterator it = Alarm.get_nth_node(ind);
@@ -335,7 +379,7 @@ void find_cpt(network &Alarm, int ind){
         n = n*((*temp).get_nvalues());
     }
 
-    int cpt_values[n][m+1];
+    float cpt_values[n][m+1];
     for(int i=0; i<n; i++){
         for(int j=0; j<m+1; j++)
             cpt_values[i][j] = 0;
@@ -343,20 +387,65 @@ void find_cpt(network &Alarm, int ind){
     vector<int> entry;
     int x=0; 
     int y=0;
+
+    //main loop
     for(int i=0; i<patient_list.size(); i++){
-        for(int j=0; j<parent_index.size(); j++){
-            vector<string> values_list = parents[j].get_values();
-            int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
-            if(var_numb<0){
-                //call function to store "?"
-                break;
-            }
-            entry.push_back(var_numb);
+        bool flag = false;
+        //ignore this patient entry
+        if(patient_list[i][ind].compare("?")){
+            unknowns u;
+            u.row =i; u.colm = ind;
+            unknowns_list.push_back(u);
+            break;
         }
-        x = find_row(entry, parents);
-        y = get_index_val(gn.get_values(),patient_list[i][ind]);
-        cpt_values[x][y]++;
-        cpt_values[x][m]++;
+        int prob_val = check_prob_val(patient_list[i], parent_index);
+        //////////////////////////////////// case when one of the parent had an unknown value
+        if(prob_val>=0){
+            for(int j=0; j<parent_index.size(); j++){
+                if(j==prob_val)
+                    break;
+                vector<string> values_list = parents[j].get_values();
+                int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
+                if(var_numb<0){
+                    break;
+                } 
+                entry.push_back(var_numb);
+            }
+            string s = patient_list[i][parent_index[prob_val]];
+            vector<string> values_list = parents[prob_val].get_values(); 
+            vector<string> var;
+            vector<float> val;
+            get_var_val(s, var, val);            
+            for(int i=0; i<var.size(); i++){
+                int var_numb = get_index_val(values_list,var[i]);
+                if(var_numb<0){
+                    break;
+                } 
+                std::vector<int>::iterator it = entry.begin();
+                entry.insert(it+prob_val,var_numb);
+                x = find_row(entry, parents);
+                y = get_index_val(gn.get_values(),patient_list[i][ind]);
+                cpt_values[x][y]+=val[i];
+                cpt_values[x][m]+=val[i];
+                entry.erase(it+prob_val);    
+            }   
+        }
+        ////////////////////////////////////////// normal case where all variable values are known
+        else{
+            for(int j=0; j<parent_index.size(); j++){
+                vector<string> values_list = parents[j].get_values();
+                int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
+                if(var_numb<0){
+                    break;
+                } 
+                entry.push_back(var_numb);
+            }
+            x = find_row(entry, parents);
+            y = get_index_val(gn.get_values(),patient_list[i][ind]);
+            cpt_values[x][y]++;
+            cpt_values[x][m]++;
+        }
+        
     }
 
     vector<float> cpt_list;
@@ -373,3 +462,4 @@ void find_cpt(network &Alarm, int ind){
 
 
 
+// "low = 0.4 medium = 0.3 high = 0.3"
