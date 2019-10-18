@@ -287,7 +287,6 @@ int main()
 // Example: to do something
 	cout<<"Perfect! Hurrah! \n";
     cout<<stof("20.356647232")<<endl;
-
     vector<int> roots;
     
     // list<Graph_Node>::iterator listIt;
@@ -453,6 +452,12 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         for(int j=0; j<patient_list[0].size(); j++){
             float d = cpt_values[i][j]/cpt_values[i][m];
             cout<<ind<<" d "<<d<<endl;
+            if(d==1){
+                d = d-0.0002;    
+            }
+            if(d==0){
+                d = d+0.0002;
+            }
             cpt_list.push_back(d);
         }
     }
