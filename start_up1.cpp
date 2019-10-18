@@ -94,9 +94,13 @@ public:
  // The whole network represted as a list of nodes
 class network{
 
-	list <Graph_Node> Pres_Graph;
 
+	
 public:
+
+    list <Graph_Node> Pres_Graph;
+
+
 	int addNode(Graph_Node node)
 	{
 		Pres_Graph.push_back(node);
@@ -278,29 +282,24 @@ network read_network()
   	return Alarm;
 }
 
+vector<int> get_roots(network Alarm){
 
-int main()
-{
-	network Alarm;
-	Alarm=read_network();
-    
-// Example: to do something
-	cout<<"Perfect! Hurrah! \n";
-    cout<<stof("20.356647232")<<endl;
     vector<int> roots;
     
-    // list<Graph_Node>::iterator listIt;
-    // int count=0;
-    // for(listIt=Alarm.begin();listIt!=Alarm.end();listIt++)
-    // {
-    //     if(listIt->get_Parents().size()==0) roots.push_back(count);
-    // count ++;
-    // }
-	
+    list<Graph_Node>::iterator listIt;
+    int count=0;
+    for(listIt=Alarm.Pres_Graph.begin();listIt!=Alarm.Pres_Graph.end();listIt++)
+    {
+        if(listIt->get_Parents().size()==0) roots.push_back(count);
+          count ++;
+    }
+
+    return roots;
 }
 
 int get_index_val(vector<string> v, string s){
     for(int i=0 ;i<v.size(); i++){
+        // cout<<v[i]<<endl;
         if(s.compare(v[i])==0)
             return i;
     }
@@ -363,7 +362,7 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
 void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     list<Graph_Node>::iterator it = Alarm.get_nth_node(ind);
     Graph_Node gn = (*it);
-
+    cout<<"shreya "<<gn.get_name()<<" ind "<<ind<<endl;
     vector<string> parent_str = gn.get_Parents();
     vector<Graph_Node> parents;
     vector<int> parent_index;
@@ -377,7 +376,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         parent_index.push_back(Alarm.search_index((*temp).get_name()));
         n = n*((*temp).get_nvalues());
     }
-
+    cout<<"m "<<m<<" n "<<n<<endl;
     float cpt_values[n][m+1];
     for(int i=0; i<n; i++){
         for(int j=0; j<m+1; j++)
@@ -390,16 +389,21 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     //main loop
     for(int i=0; i<patient_list.size(); i++){
         bool flag = false;
+        entry.clear();
+        // cout<<"here \n";
         //ignore this patient entry
-        if(patient_list[i][ind].compare("?")){
+            // cout<<i<<" damn "<< patient_list[i][ind] <<endl;
+
+        if(patient_list[i][ind].compare("?")==0){
             unknowns u;
             u.row =i; u.colm = ind;
             unknowns_list.push_back(u);
-            break;
+            continue;
         }
         int prob_val = check_prob_val(patient_list[i], parent_index);
         //////////////////////////////////// case when one of the parent had an unknown value
         if(prob_val>=0){
+            // cout<<"here1 \n";
             for(int j=0; j<parent_index.size(); j++){
                 if(j==prob_val)
                     break;
@@ -431,6 +435,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         }
         ////////////////////////////////////////// normal case where all variable values are known
         else{
+            // cout<<"here2 \n";
             for(int j=0; j<parent_index.size(); j++){
                 vector<string> values_list = parents[j].get_values();
                 int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
@@ -441,17 +446,22 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
             }
             x = find_row(entry, parents);
             y = get_index_val(gn.get_values(),patient_list[i][ind]);
+            // cout<<gn.get_values()[0]<<endl;
+            // cout<<patient_list[i][ind]<<" "<<y <<endl;
             cpt_values[x][y]++;
+            cout<<cpt_values[x][y]<<endl;
             cpt_values[x][m]++;
         }
         
     }
 
     vector<float> cpt_list;
-    for(int i=0; i<patient_list.size(); i++){
-        for(int j=0; j<patient_list[0].size(); j++){
-            float d = cpt_values[i][j]/cpt_values[i][m];
-            cout<<ind<<" d "<<d<<endl;
+    for(int i=0; i<n; i++){
+        for(int j=0; j<m; j++){
+            float d=0;
+            if(cpt_values[i][m]>0)
+                d = cpt_values[i][j]/cpt_values[i][m];
+            cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
             if(d==1){
                 d = d-0.0002;    
             }
@@ -465,7 +475,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
 }
 
-void replace_unknowns(network &Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list){
+void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
     vector<float> cpt_list = gn.get_CPT();
 
     vector<string> parent_str = gn.get_Parents();
@@ -484,26 +494,82 @@ void replace_unknowns(network &Alarm, int ind, Graph_Node gn, vector<vector<stri
 
     vector<int> entry;
 
-    for(int i=0; i<patient_list.size(); i++){
-        if(patient_list[i][ind].compare("?")){
-            for(int j=0; j<parent_index.size(); j++){
-                vector<string> values_list = parents[j].get_values();
-                int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
-                if(var_numb<0){
-                    break;
-                } 
-                entry.push_back(var_numb);
-            }
-            int x = find_row(entry, parents);
-            x = x*m;
-            string input_s="";
-            for(int k=0; k<m; k++){
-                input_s = input_s + gn.get_values()[k] + " = " + to_string(cpt_list[x+k]) + " ";
-            }
-            patient_list[i][ind] = input_s;
+    int start = 0;
+    while(true){
+        if(unknowns_list[start].colm==ind)
+            break;
+        else start++;
+    }
+
+    while(unknowns_list[start].colm==ind){
+        int row = unknowns_list[start].row;
+        for(int j=0; j<parent_index.size(); j++){
+            vector<string> values_list = parents[j].get_values();
+            int var_numb = get_index_val(values_list,patient_list[row][parent_index[j]]);
+            if(var_numb<0){
+                break;
+            } 
+            entry.push_back(var_numb);
         }
+        int x = find_row(entry, parents);
+        x = x*m;
+        string input_s="";
+        for(int k=0; k<m; k++){
+            input_s = input_s + gn.get_values()[k] + " = " + to_string(cpt_list[x+k]) + " ";
+        }
+        patient_list[row][ind] = input_s;
+        start++;
     }
     return;
 }
+
+string remove_quotes(string s){
+    int n = s.size();
+    return(s.substr(1,n-2));
+}
+
+vector<vector<string> > read_file(string filename){
+    fstream file;
+    string word = "";
+    string line = "";
+    file.open(filename.c_str()); 
+    vector<vector<string> > patient_list;
+    // extracting words from the file 
+    while (getline(file,line)) 
+    { 
+        // displaying content
+        vector<string> p;
+        istringstream iss(line);
+
+        while(iss>>word){
+            p.push_back(word);
+            cout<<remove_quotes(word)<<endl;
+        }
+        
+        patient_list.push_back(p);
+    } 
+    return patient_list;
+}
+
+
+
+int main()
+{
+    string filename = "records.dat";
+    patient_list = read_file(filename);
+    cout<<patient_list.size()<<"  "<<patient_list[0].size()<<endl;
+    
+    network Alarm;
+    Alarm=read_network();
+    
+    vector<int> roots;
+
+    roots = get_roots(Alarm);
+    vector<vector<string> > patient_list_copy = patient_list;
+
+    find_cpt(Alarm, roots[0], patient_list_copy);
+    return 0;
+}
+
 
 // "low = 0.4 medium = 0.3 high = 0.3"
