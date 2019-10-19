@@ -345,6 +345,7 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
     string temp = "";
     float value=0;
     int start=0;
+    try{
     for(int i=0; i<s.size(); i++){
         if(s[i]==' '){
             temp = s.substr(start,i);
@@ -352,12 +353,16 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
             i = start;
             while(s[i]!=' ')
                 i++;
+            if(s.substr(start,2).compare("0.")!=0)
+                throw s.substr(start,i);
             value = stof(s.substr(start,i));
             var.push_back(temp);
             val.push_back(value);
+            start = i+1;
         }
-        i++;
-        start = i;
+    }
+    }catch(string ex){
+        cout<<"exception: "<<ex<<endl;
     }
     return;
 }
@@ -461,18 +466,20 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     }
 
     vector<float> cpt_list;
+    cout<<gn.get_name()<<endl;
     for(int i=0; i<n; i++){
         for(int j=0; j<m; j++){
             float d=0;
             if(cpt_values[i][m]>0)
                 d = cpt_values[i][j]/cpt_values[i][m];
-           cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
             if(d==1){
                 d = d-0.0002;    
             }
             if(d==0){
                 d = d+0.0002;
             }
+           cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
+            
             cpt_list.push_back(d);
         }
     }
@@ -540,7 +547,7 @@ void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<strin
         }
         patient_list[row][ind] = input_s;
         start++;
-
+        // cout<<input_s<<endl;
     }
     return;
 }
@@ -568,19 +575,6 @@ vector<vector<string> > read_file(string filename){
         patient_list.push_back(p);
     } 
     return patient_list;
-}
-
-
-void traverseIndex(network& Alarm, int index, vector<vector<string>> patient_list){
-
-    find_cpt(Alarm,index,patient_list);
-    cout<<"replace now\n";
-    // DOUBT: Which graph node? IS this right?
-    Graph_Node gn = *(Alarm.get_nth_node(index));
-    replace_unknowns(Alarm, index, gn, patient_list, unknowns_list);
-    // WORK: Write a function to write the CPT values back in the file
-
-
 }
 
 string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, vector<Graph_Node> parents, vector<int> parent_index){
@@ -680,7 +674,7 @@ string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, 
         input_s = input_s + gn.get_values()[k] + " = " + to_string(prob[k]) + " ";
         // cout<<k<<endl;
     }
-
+    // cout<<input_s<<endl;
     return input_s;
 }
 
@@ -727,6 +721,18 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
 }
 
 
+void traverseIndex(network& Alarm, int index, vector<vector<string>> patient_list){
+
+    find_cpt(Alarm,index,patient_list);
+    cout<<"replace now\n";
+    // DOUBT: Which graph node? IS this right?
+    Graph_Node gn = *(Alarm.get_nth_node(index));
+    replace_unknowns(Alarm, index, gn, patient_list, unknowns_list);
+    // WORK: Write a function to write the CPT values back in the file
+
+
+}
+
 void traverse(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
 
     vector<int> newChild;
@@ -764,7 +770,7 @@ void traverse(network& Alarm, vector<int> roots, vector<vector<string>> patient_
 
 }
 
-void traverseIndex_EM(network& Alarm, int index, vector<vector<string>> patient_list){
+void traverseIndex_EM(network Alarm, int index, vector<vector<string>> &patient_list){
 
 
     // DOUBT: Which graph node? IS this right?
@@ -773,7 +779,7 @@ void traverseIndex_EM(network& Alarm, int index, vector<vector<string>> patient_
 
 }
 
-void traverse_EM(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
+void traverse_EM(network Alarm, vector<int> roots, vector<vector<string>> &patient_list){
 
     vector<int> newChild;
 
@@ -794,6 +800,7 @@ void traverse_EM(network& Alarm, vector<int> roots, vector<vector<string>> patie
 void traverseIndex_EM1(network& Alarm, int index, vector<vector<string>> patient_list){
 
   find_cpt(Alarm,index,patient_list);
+  cout<<"done round"<<endl;
     // WORK: Write a function to write the CPT values back in the file - they are gettin updated at each cpt calculation. Just need to convert that alarm network to file
 
 }
@@ -803,7 +810,9 @@ void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> pati
     vector<int> newChild;
 
     for (int i=0; i<roots.size() ; i++){
+
         traverseIndex_EM1(Alarm,roots[i],patient_list);
+        cout<<i<<endl;
         vector<int> added = (*(Alarm.get_nth_node(roots[i]))).get_children();
         newChild.insert(newChild.end(),added.begin(), added.end());
     }
@@ -813,17 +822,18 @@ void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> pati
         traverse_EM1(Alarm,newChild,patient_list);
     }
 
-
 }
 
 
-bool goalTest (network Alarm, network Alarm_old){
+float goalTest (network Alarm, network Alarm_old){
 
     network vGraph1 = Alarm_old;    
  
     network vGraph2 = Alarm;    
 
     bool flag = true;
+
+    float total_diff = 0;
 
     int flagBreak = 0;
     for(int i=0; i<vGraph1.netSize(); i++){
@@ -835,23 +845,23 @@ bool goalTest (network Alarm, network Alarm_old){
         vector<float> CPT2 = g2.get_CPT();
 
         for(int j=0; j< CPT1.size(); j++){
+            total_diff = total_diff + abs(CPT2[j] - CPT1[j]);
+            // if (abs(CPT2[j] - CPT1[j]) > 0.0001){
 
-            if (abs(CPT2[i] - CPT1[i]) > 0.0001){
-
-                flagBreak = 1;
-                flag = false;
-                break;
-            }
+            //     flagBreak = 1;
+            //     flag = false;
+            //     break;
+            // }
 
         }
 
-        if (flagBreak == 1) {
-            break;
-        }
+        // if (flagBreak == 1) {
+        //     break;
+        // }
 
     }
 
-    return flag;
+    return total_diff;
 }
 
 
@@ -872,16 +882,21 @@ int main()
     roots = get_roots(Alarm);
     vector<vector<string> > patient_list_copy = patient_list;
 
+    // ofstream myfile;
+    //   myfile.open ("example.txt");
+    //   myfile << "Writing this to a file.\n";
+      
 // The first traversal, storing the CPT valuess : Assumed to be working fine!
     traverse(Alarm,roots,patient_list_copy);
 
 // DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
    
-   /* network Alarm_old = Alarm;
-
+    network Alarm_old = Alarm;
     int count = 0;
-    while((!goalTest(Alarm,Alarm_old)) || (count == 0)){
+    float diff = 10;
+    // cout<<count<<" total diff: "<< diff <<endl;
 
+    while(diff>5 || (count == 0)){
         Alarm_old = Alarm;
         count++;
 
@@ -893,10 +908,13 @@ int main()
 
         traverse_EM(Alarm,roots,patient_list);
         traverse_EM1(Alarm,roots,patient_list);
+        diff = goalTest(Alarm,Alarm_old);
+        cout<<count<<" total diff: "<< diff <<endl;
+
 
     }
 
-    */
+    
     return 0;
 }
 
