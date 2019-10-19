@@ -333,10 +333,10 @@ bool has_space(string str){
    return false;
 }
 
-int check_prob_val(vector<string> values, vector<int> index, bool print){
+int check_prob_val(vector<string> values, vector<int> index){
     // if(print) cout<<"i am here \n";
     for(int i=0; i<index.size(); i++){
-        if(print)
+        // if(print)
         // cout<<index[i]<< " index\n";
         if(has_space(values[index[i]])){
             // cout<<values[index[i]]<<endl;
@@ -406,11 +406,19 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
     // cout<<"results \n";
     for(int i=0; i<result.size(); i+=3){
         var.push_back(result[i]);
-        cout<<result[i]<<endl;
+        // cout<<result[i]<<endl;
         val.push_back(stof(result[i+2]));
-        cout<<stof(result[i+2])<<endl;
+        // cout<<stof(result[i+2])<<endl;
     }
     return;
+}
+
+bool diff_list(vector<float> v1, vector<float> v2){
+    for(int i=0; i<v1.size(); i++){
+        if(v1[i]!=v2[i])
+            return true;
+    }
+    return false;
 }
 
 
@@ -460,12 +468,12 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
         }
         // if(print)
         // cout<<print<<" nice \n";
-        int prob_val = check_prob_val(patient_list[i], parent_index,print);
+        int prob_val = check_prob_val(patient_list[i], parent_index);
         //////////////////////////////////// case when one of the parent had an unknown value
-        // if(print) cout<<prob_val<<" here i am \n";
+        // if(!print && prob_val>=0) cout<<prob_val<<" here i am \n";
 
         if(prob_val>=0){
-            // if(print)
+            // if(!print)
             // cout<<"here1 \n";
             for(int j=0; j<parent_index.size(); j++){
                 if(j==prob_val)
@@ -488,7 +496,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             vector<float> val;
             get_var_val(s, var, val);            
             for(int i=0; i<var.size(); i++){
-                // if(print) cout<<var[i]<<" hiii \n";
+                // if(print) cout<<var[i]<<" "<<val[i]<<" hiii \n";
                 int var_numb = get_index_val(values_list,var[i]);
                 if(var_numb<0){
                     break;
@@ -511,8 +519,8 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
         }
         ////////////////////////////////////////// normal case where all variable values are known
         else{
-            if(print)
-            cout<<"here2 \n";
+            // if(!print)
+            // cout<<"here2 \n";
             for(int j=0; j<parent_index.size(); j++){
                 vector<string> values_list = parents[j].get_values();
                 int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
@@ -534,8 +542,8 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
     }
 
     vector<float> cpt_list;
-    if(print)
-    cout<<gn.get_name()<<endl;
+    // if(print)
+    // cout<<gn.get_name()<<endl;
     for(int i=0; i<m; i++){
         for(int j=0; j<n; j++){
             float d=0;
@@ -549,18 +557,20 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             }
             //if(print)
             // cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;  //CHNAGE!!
-            if(print)
-            cpt_list.push_back(0.5);
-            else 
+            // if(print)
+            // cpt_list.push_back(0.5);
+            // else 
             cpt_list.push_back(d);
 
         }
     }
 
+    // if(diff_list((*Alarm.get_nth_node(ind)).get_CPT(),cpt_list))
+    //     cout<<ind<<" yoyoyoyo \n";
+
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
    // cout<<"set done \n";
 }
-
 
 void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
     visited.push_back(gn.get_name());
@@ -793,8 +803,8 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
             break;
         int rows = unknowns_list[start].row;
         string input_s = find_CPTmarkov(Alarm, patient_list[rows], gn, parents, parent_index);
-        if((patient_list[rows][ind]).compare(input_s)!=0)
-            cout<<"old ind "<<ind<<"row "<<rows<<input_s<<endl<<patient_list[rows][ind]<<endl;
+        // if((patient_list[rows][ind]).compare(input_s)!=0)
+        //     cout<<"old ind "<<ind<<"row "<<rows<<input_s<<endl<<patient_list[rows][ind]<<endl;
         patient_list[rows][ind] = input_s;
         // cout<<"new ind "<<ind<<"row "<<rows<<" "<<input_s<<endl;
         start++;
@@ -1146,7 +1156,7 @@ int main()
 // The first traversal, storing the CPT valuess : Assumed to be working fine!
     traverse(Alarm,roots,patient_list);
     // write_file("alarm.bif", "solved_alarm.bif", Alarm);
-        write_file_pat("pat.txt", patient_list);
+        // write_file_pat("pat.txt", patient_list);
 // DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
    
     vector<float> old_CPT_list;
@@ -1157,11 +1167,11 @@ int main()
     float diff = 10;
     // cout<<count<<" total diff: "<< diff <<endl;
 
-    while(diff>5 || (count == 0)){
+    while(true){
         
         old_CPT_list = Alarm.find_all_CPT();
-        cout<<old_CPT_list[0]<<" "<<old_CPT_list[1]<<" "<<old_CPT_list[2]<<" "<<old_CPT_list[3]<<" "<<old_CPT_list[4]<<" \n";
-        write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
+        // cout<<old_CPT_list[0]<<" "<<old_CPT_list[1]<<" "<<old_CPT_list[2]<<" "<<old_CPT_list[3]<<" "<<old_CPT_list[4]<<" \n";
+        // write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
         
         count++;
 
@@ -1172,15 +1182,16 @@ int main()
         } 
 
         traverse_EM(Alarm,roots,patient_list);
+        // write_file_pat("pat"+to_string(count) +".txt", patient_list);
+
         traverse_EM1(Alarm,roots,patient_list);
-        write_file_pat("pat"+to_string(count) +".txt", patient_list);
 
         new_CPT_list = Alarm.find_all_CPT();
-        cout<<new_CPT_list[0]<<" "<<new_CPT_list[1]<<" "<<new_CPT_list[2]<<" "<<new_CPT_list[3]<<" "<<new_CPT_list[4]<<" \n";
+        // cout<<new_CPT_list[0]<<" "<<new_CPT_list[1]<<" "<<new_CPT_list[2]<<" "<<new_CPT_list[3]<<" "<<new_CPT_list[4]<<" \n";
 
         diff = goalTest(old_CPT_list,new_CPT_list);
         cout<<count<<" total diff: "<< diff <<endl;
-        write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
+        write_file("alarm.bif", "solved_alarm.bif", Alarm);
 
 
     }
