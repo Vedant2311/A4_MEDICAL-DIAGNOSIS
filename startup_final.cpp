@@ -16,6 +16,7 @@ struct unknowns{
 };
 
 vector<unknowns> unknowns_list;
+vector<int> visited;
 vector<vector<string> > patient_list;
 
 // Our graph consists of a list of nodes where each node is represented as follows:
@@ -317,8 +318,10 @@ bool has_space(string str){
 
 int check_prob_val(vector<string> values, vector<int> index){
     for(int i=0; i<index.size(); i++){
-        if(has_space(values[index[i]]))
+        if(has_space(values[index[i]])){
+            cout<<values[index[i]]<<endl;
             return i;
+        }
     }
     return -1;
     //returns the index of parent in this node's list who prev had a "?"
@@ -368,10 +371,10 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
 }
 
 
-void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
+void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, bool print){
     list<Graph_Node>::iterator it = Alarm.get_nth_node(ind);
     Graph_Node gn = (*it);
- //   cout<<"shreya "<<gn.get_name()<<" ind "<<ind<<endl;
+   // cout<<"shreya "<<gn.get_name()<<" ind "<<ind<<endl;
     vector<string> parent_str = gn.get_Parents();
     vector<Graph_Node> parents;
     vector<int> parent_index;
@@ -401,7 +404,8 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         entry.clear();
         // cout<<"here \n";
         //ignore this patient entry
-            // cout<<i<<" damn "<< patient_list[i][ind] <<endl;
+            if(print)
+            cout<<i<<" damn "<< patient_list[i][ind] <<endl;
 
         if(patient_list[i][ind].compare("\"?\"")==0){
             unknowns u;
@@ -410,9 +414,13 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
             // cout<<"? found "<<patient_list[i][ind]<<endl;
             continue;
         }
+            
         int prob_val = check_prob_val(patient_list[i], parent_index);
         //////////////////////////////////// case when one of the parent had an unknown value
+        if(print) cout<<prob_val<<" here i am \n";
+
         if(prob_val>=0){
+            // if(print)
             // cout<<"here1 \n";
             for(int j=0; j<parent_index.size(); j++){
                 if(j==prob_val)
@@ -445,7 +453,8 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         }
         ////////////////////////////////////////// normal case where all variable values are known
         else{
-            // cout<<"here2 \n";
+            if(print)
+            cout<<"here2 \n";
             for(int j=0; j<parent_index.size(); j++){
                 vector<string> values_list = parents[j].get_values();
                 int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
@@ -456,6 +465,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
             }
             x = find_row(entry, parents);
             y = get_index_val(gn.get_values(),patient_list[i][ind]);
+            if(print) cout<<"x; "<<x<<"y; "<<y<<endl;
             // cout<<gn.get_values()[0]<<endl;
             // cout<<patient_list[i][ind]<<" "<<y <<endl;
             cpt_values[x][y]+=1;
@@ -478,18 +488,20 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
             if(d==0){
                 d = d+0.0002;
             }
-           // cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
+            if(print)
+            cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
 
             cpt_list.push_back(d);
         }
     }
 
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
-  //  cout<<"set done \n";
+   // cout<<"set done \n";
 }
 
 
 void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
+    visited.push_back(ind);
     vector<float> cpt_list = gn.get_CPT();
     vector<string> parent_str = gn.get_Parents();
     // cout<<"name "<<gn.get_name()<<parent_str.size()<<endl;
@@ -727,7 +739,7 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
 
 void traverseIndex(network& Alarm, int index, vector<vector<string>> patient_list){
 
-    find_cpt(Alarm,index,patient_list);
+    find_cpt(Alarm,index,patient_list,false);
  //   cout<<"replace now\n";
     // DOUBT: Which graph node? IS this right?
     Graph_Node gn = *(Alarm.get_nth_node(index));
@@ -814,7 +826,7 @@ void traverse_EM(network Alarm, vector<int> roots, vector<vector<string>> &patie
 
 void traverseIndex_EM1(network& Alarm, int index, vector<vector<string>> patient_list){
 
-  find_cpt(Alarm,index,patient_list);
+  find_cpt(Alarm,index,patient_list,true);
   cout<<"done round"<<endl;
     // WORK: Write a function to write the CPT values back in the file - they are gettin updated at each cpt calculation. Just need to convert that alarm network to file
 
@@ -826,9 +838,9 @@ void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> pati
     vector<int> newChild;
 
     for (int i=0; i<roots.size() ; i++){
-
+        cout<<roots[i]<<endl;
         traverseIndex_EM1(Alarm,roots[i],patient_list);
-       cout<<i<<endl;
+       cout<<i<<" i "<<endl;
         vector<int> added = (*(Alarm.get_nth_node(roots[i]))).get_children();
         newChild.insert(newChild.end(),added.begin(), added.end());
     }
@@ -846,7 +858,7 @@ void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> pati
     if (newRoot.size() ==0) return;
     else{
         cout << newRoot.size() << endl;
-        
+
         traverse_EM1(Alarm,newRoot,patient_list);
     }
 
