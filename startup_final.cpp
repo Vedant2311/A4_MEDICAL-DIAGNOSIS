@@ -5,8 +5,8 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
-
-
+#include <algorithm>
+#include <unordered_set>
 // Format checker just assumes you have Alarm.bif and Solved_Alarm.bif (your file) in current directory
 using namespace std;
 
@@ -359,10 +359,11 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
     return;
 }
 
+
 void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     list<Graph_Node>::iterator it = Alarm.get_nth_node(ind);
     Graph_Node gn = (*it);
-    cout<<"shreya "<<gn.get_name()<<" ind "<<ind<<endl;
+ //   cout<<"shreya "<<gn.get_name()<<" ind "<<ind<<endl;
     vector<string> parent_str = gn.get_Parents();
     vector<Graph_Node> parents;
     vector<int> parent_index;
@@ -376,7 +377,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         parent_index.push_back(Alarm.search_index((*temp).get_name()));
         n = n*((*temp).get_nvalues());
     }
-    cout<<"m "<<m<<" n "<<n<<endl;
+ //   cout<<"m "<<m<<" n "<<n<<endl;
     float cpt_values[n][m+1];
     for(int i=0; i<n; i++){
         for(int j=0; j<m+1; j++)
@@ -390,11 +391,11 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     for(int i=0; i<patient_list.size(); i++){
         bool flag = false;
         entry.clear();
-        // cout<<"here \n";
+        cout<<"here \n";
         //ignore this patient entry
             // cout<<i<<" damn "<< patient_list[i][ind] <<endl;
 
-        if(patient_list[i][ind].compare("?")==0){
+        if(patient_list[i][ind].compare("\"?\"")==0){
             unknowns u;
             u.row =i; u.colm = ind;
             unknowns_list.push_back(u);
@@ -403,7 +404,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         int prob_val = check_prob_val(patient_list[i], parent_index);
         //////////////////////////////////// case when one of the parent had an unknown value
         if(prob_val>=0){
-            // cout<<"here1 \n";
+            cout<<"here1 \n";
             for(int j=0; j<parent_index.size(); j++){
                 if(j==prob_val)
                     break;
@@ -435,7 +436,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
         }
         ////////////////////////////////////////// normal case where all variable values are known
         else{
-            // cout<<"here2 \n";
+            cout<<"here2 \n";
             for(int j=0; j<parent_index.size(); j++){
                 vector<string> values_list = parents[j].get_values();
                 int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
@@ -449,7 +450,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
             // cout<<gn.get_values()[0]<<endl;
             // cout<<patient_list[i][ind]<<" "<<y <<endl;
             cpt_values[x][y]++;
-            cout<<cpt_values[x][y]<<endl;
+           cout<<cpt_values[x][y]<<endl;
             cpt_values[x][m]++;
         }
         
@@ -461,7 +462,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
             float d=0;
             if(cpt_values[i][m]>0)
                 d = cpt_values[i][j]/cpt_values[i][m];
-            cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
+           cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;
             if(d==1){
                 d = d-0.0002;    
             }
@@ -473,7 +474,9 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list){
     }
 
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
+    cout<<"set done \n";
 }
+
 
 void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
     vector<float> cpt_list = gn.get_CPT();
@@ -523,11 +526,6 @@ void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<strin
     return;
 }
 
-string remove_quotes(string s){
-    int n = s.size();
-    return(s.substr(1,n-2));
-}
-
 vector<vector<string> > read_file(string filename){
     fstream file;
     string word = "";
@@ -543,7 +541,7 @@ vector<vector<string> > read_file(string filename){
 
         while(iss>>word){
             p.push_back(word);
-            cout<<remove_quotes(word)<<endl;
+            // cout<<remove_quotes(word)<<endl;
         }
         
         patient_list.push_back(p);
@@ -557,79 +555,9 @@ void traverseIndex(network& Alarm, int index, vector<vector<string>> patient_lis
     find_cpt(Alarm,index,patient_list);
 
     // DOUBT: Which graph node? IS this right?
-    Graph_Node gn = Alarm.get_nth_node(index);
-    replace_unknowns(Alarm, index, gn, &patient_list, unknowns_list);
+    Graph_Node gn = *(Alarm.get_nth_node(index));
+    replace_unknowns(Alarm, index, gn, patient_list, unknowns_list);
     // WORK: Write a function to write the CPT values back in the file
-
-
-}
-
-void traverse(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
-
-    vector<int> newChild;
-
-    for (int i=0; i<roots.size() ; i++){
-        traverseIndex(Alarm,roots(i),patient_list);
-        vector<int> added = Alarm.get_nth_node(roots(i)).Children;
-        newChild.insert(newChild.end(),added.begin, added.end());
-    }
-
-    if (newChild.size() ==0) return;
-    else{
-        traverse(Alarm,newChild,patient_list);
-    }
-
-
-}
-
-void traverseIndex_EM(network& Alarm, int index, vector<vector<string>> patient_list){
-
-
-    // DOUBT: Which graph node? IS this right?
-    Graph_Node gn = Alarm.get_nth_node(index);
-    update_unknowns(Alarm, index, gn, &patient_list, unknowns_list);
-
-}
-
-void traverse_EM(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
-
-    vector<int> newChild;
-
-    for (int i=0; i<roots.size() ; i++){
-        traverseIndex_EM(Alarm,roots(i),patient_list);
-        vector<int> added = Alarm.get_nth_node(roots(i)).Children;
-        newChild.insert(newChild.end(),added.begin, added.end());
-    }
-
-    if (newChild.size() ==0) return;
-    else{
-        traverse_EM(Alarm,newChild,patient_list);
-    }
-
-
-}
-
-void traverseIndex_EM1(network& Alarm, int index, vector<vector<string>> patient_list){
-
-  find_cpt(Alarm,index,patient_list);
-    // WORK: Write a function to write the CPT values back in the file
-
-}
-
-void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
-
-    vector<int> newChild;
-
-    for (int i=0; i<roots.size() ; i++){
-        traverseIndex_EM1(Alarm,roots(i),patient_list);
-        vector<int> added = Alarm.get_nth_node(roots(i)).Children;
-        newChild.insert(newChild.end(),added.begin, added.end());
-    }
-
-    if (newChild.size() ==0) return;
-    else{
-        traverse_EM1(Alarm,newChild,patient_list);
-    }
 
 
 }
@@ -654,25 +582,117 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
 
 }
 
+
+void traverse(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
+
+    vector<int> newChild;
+    //cout << "Endl" << endl;
+    
+    for (int i=0; i<roots.size() ; i++){
+        traverseIndex(Alarm,roots[i],patient_list);
+    //    cout << roots[i] << endl;
+
+        vector<int> added = (*(Alarm.get_nth_node(roots[i]))).get_children();
+        newChild.insert(newChild.end(),added.begin(), added.end());
+    }
+
+//    cout << newChild.size() << endl;
+
+
+    std::unordered_set<int> set;
+    std::copy(newChild.begin(),
+            newChild.end(),
+            std::inserter(set, set.end()));
+
+
+    std::vector<int> newRoot;
+    newRoot.assign(set.begin(), set.end());
+
+//    for(int i=0; i<newRoot.size(); i++) cout << newRoot[i] << endl;
+
+    
+    if (newRoot.size() ==0) return;
+    else{
+        traverse(Alarm,newRoot,patient_list);
+    }
+    
+
+
+}
+
+void traverseIndex_EM(network& Alarm, int index, vector<vector<string>> patient_list){
+
+
+    // DOUBT: Which graph node? IS this right?
+    Graph_Node gn = *(Alarm.get_nth_node(index));
+    update_unknowns(Alarm, index, gn, patient_list, unknowns_list);
+
+}
+
+void traverse_EM(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
+
+    vector<int> newChild;
+
+    for (int i=0; i<roots.size() ; i++){
+        traverseIndex_EM(Alarm,roots[i],patient_list);
+        vector<int> added = (*(Alarm.get_nth_node(roots[i]))).get_children();
+        newChild.insert(newChild.end(),added.begin(), added.end());
+    }
+
+    if (newChild.size() ==0) return;
+    else{
+        traverse_EM(Alarm,newChild,patient_list);
+    }
+
+
+}
+
+void traverseIndex_EM1(network& Alarm, int index, vector<vector<string>> patient_list){
+
+  find_cpt(Alarm,index,patient_list);
+    // WORK: Write a function to write the CPT values back in the file - they are gettin updated at each cpt calculation. Just need to convert that alarm network to file
+
+}
+
+void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> patient_list){
+
+    vector<int> newChild;
+
+    for (int i=0; i<roots.size() ; i++){
+        traverseIndex_EM1(Alarm,roots[i],patient_list);
+        vector<int> added = (*(Alarm.get_nth_node(roots[i]))).get_children();
+        newChild.insert(newChild.end(),added.begin(), added.end());
+    }
+
+    if (newChild.size() ==0) return;
+    else{
+        traverse_EM1(Alarm,newChild,patient_list);
+    }
+
+
+}
+
+
 bool goalTest (network Alarm, network Alarm_old){
 
-    vector<Graph_Node> vGraph1 = Alarm_old.Pres_Graph;    
-    vector<Graph_Node> vGraph2 = Alarm.Pres_Graph;    
+    network vGraph1 = Alarm_old;    
+ 
+    network vGraph2 = Alarm;    
 
     bool flag = true;
 
     int flagBreak = 0;
-    for(int i=0; i<vGraph1.size(); i++){
+    for(int i=0; i<vGraph1.netSize(); i++){
 
-        Graph_Node g1 = vGraph1[i];
-        Graph_Node g2 = vGraph2[i];
+        Graph_Node g1 = *(vGraph1.get_nth_node(i));
+        Graph_Node g2 = *(vGraph2.get_nth_node(i));
 
         vector<float> CPT1 = g1.get_CPT();
         vector<float> CPT2 = g2.get_CPT();
 
         for(int j=0; j< CPT1.size(); j++){
 
-            if (abs(CPT2(i) - CPT1(i)) > 0.0001){
+            if (abs(CPT2[i] - CPT1[i]) > 0.0001){
 
                 flagBreak = 1;
                 flag = false;
@@ -709,15 +729,16 @@ int main()
     vector<vector<string> > patient_list_copy = patient_list;
 
 // The first traversal, storing the CPT valuess : Assumed to be working fine!
-    traverse(Alarm,roots,patient_list);
+    traverse(Alarm,roots,patient_list_copy);
 
-// DOUBT: I don't know if Alarm_old is a pointer or a scalar
-    network Alarm_old = Alarm;
+// DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
+   
+   /* network Alarm_old = Alarm;
 
     int count = 0;
     while((!goalTest(Alarm,Alarm_old)) || (count == 0)){
 
-        Alarm_old = Alarm
+        Alarm_old = Alarm;
         count++;
 
         endt = clock();
@@ -731,7 +752,7 @@ int main()
 
     }
 
-
+    */
     return 0;
 }
 
