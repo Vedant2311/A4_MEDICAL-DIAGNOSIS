@@ -24,53 +24,53 @@ vector<vector<string> > patient_list;
 class Graph_Node{
 
 private:
-	string Node_Name;  // Variable name 
-	vector<int> Children; // Children of a particular node - these are index of nodes in graph.
-	vector<string> Parents; // Parents of a particular node- note these are names of parents
-	int nvalues;  // Number of categories a variable represented by this node can take
-	vector<string> values; // Categories of possible values
-	vector<float> CPT; // conditional probability table as a 1-d array . Look for BIF format to understand its meaning
+    string Node_Name;  // Variable name 
+    vector<int> Children; // Children of a particular node - these are index of nodes in graph.
+    vector<string> Parents; // Parents of a particular node- note these are names of parents
+    int nvalues;  // Number of categories a variable represented by this node can take
+    vector<string> values; // Categories of possible values
+    vector<float> CPT; // conditional probability table as a 1-d array . Look for BIF format to understand its meaning
 
 public:
-	// Constructor- a node is initialised with its name and its categories
+    // Constructor- a node is initialised with its name and its categories
     Graph_Node(string name,int n,vector<string> vals)       //n - size of value set
-	{
-		Node_Name=name;
-	
-		nvalues=n;
-		values=vals;
-		
+    {
+        Node_Name=name;
+    
+        nvalues=n;
+        values=vals;
+        
 
-	}
-	string get_name()
-	{
-		return Node_Name;
-	}
-	vector<int> get_children()
-	{
-		return Children;
-	}
-	vector<string> get_Parents()
-	{
-		return Parents;
-	}
-	vector<float> get_CPT()
-	{
-		return CPT;
-	}
-	int get_nvalues()
-	{
-		return nvalues;
-	}
-	vector<string> get_values()
-	{
-		return values;
-	}
-	void set_CPT(vector<float> new_CPT)
-	{
-		CPT.clear();
-		CPT=new_CPT;
-	}
+    }
+    string get_name()
+    {
+        return Node_Name;
+    }
+    vector<int> get_children()
+    {
+        return Children;
+    }
+    vector<string> get_Parents()
+    {
+        return Parents;
+    }
+    vector<float> get_CPT()
+    {
+        return CPT;
+    }
+    int get_nvalues()
+    {
+        return nvalues;
+    }
+    vector<string> get_values()
+    {
+        return values;
+    }
+    void set_CPT(vector<float> new_CPT)
+    {
+        CPT.clear();
+        CPT=new_CPT;
+    }
     void set_Parents(vector<string> Parent_Nodes)
     {
         Parents.clear();
@@ -97,23 +97,23 @@ public:
 class network{
 
 
-	
+    
 public:
 
     list <Graph_Node> Pres_Graph;
 
 
-	int addNode(Graph_Node node)
-	{
-		Pres_Graph.push_back(node);
-		return 0;
-	}
+    int addNode(Graph_Node node)
+    {
+        Pres_Graph.push_back(node);
+        return 0;
+    }
     
     
-	int netSize()
-	{
-		return Pres_Graph.size();
-	}
+    int netSize()
+    {
+        return Pres_Graph.size();
+    }
     // get the index of node with a given name
     int get_index(string val_name)
     {
@@ -169,119 +169,133 @@ public:
         return -1;
     }
 
+    vector<float> find_all_CPT(){
 
-	
+        vector<float> res;
+        list<Graph_Node>::iterator listIt;
+        for(listIt=Pres_Graph.begin();listIt!=Pres_Graph.end();listIt++)
+        {
+            std::vector<float> added = (*listIt).get_CPT();
+            res.insert(res.end(),added.begin(), added.end()); 
+        }
+    
+        return res;
+
+
+    }
+
+    
 
 };
 
 network read_network()
 {
-	network Alarm;
-	string line;
-	int find=0;
-  	ifstream myfile("alarm.bif"); 
-  	string temp;
-  	string name;
-  	vector<string> values;
-  	
+    network Alarm;
+    string line;
+    int find=0;
+    ifstream myfile("alarm.bif"); 
+    string temp;
+    string name;
+    vector<string> values;
+    
     if (myfile.is_open())
     {
-    	while (! myfile.eof() )
-    	{
-    		stringstream ss;
-      		getline (myfile,line);
-      		
-      		
-      		ss.str(line);
-     		ss>>temp;
-     		
-     		
-     		if(temp.compare("variable")==0)
-     		{
+        while (! myfile.eof() )
+        {
+            stringstream ss;
+            getline (myfile,line);
+            
+            
+            ss.str(line);
+            ss>>temp;
+            
+            
+            if(temp.compare("variable")==0)
+            {
                     
-     				ss>>name;
-     				getline (myfile,line);
+                    ss>>name;
+                    getline (myfile,line);
                    
-     				stringstream ss2;
-     				ss2.str(line);
-     				for(int i=0;i<4;i++)
-     				{
-     					
-     					ss2>>temp;
-     					
-     					
-     				}
-     				values.clear();
-     				while(temp.compare("};")!=0)
-     				{
-     					values.push_back(temp);
-     					
-     					ss2>>temp;
-    				}
-     				Graph_Node new_node(name,values.size(),values);
-     				int pos=Alarm.addNode(new_node);
+                    stringstream ss2;
+                    ss2.str(line);
+                    for(int i=0;i<4;i++)
+                    {
+                        
+                        ss2>>temp;
+                        
+                        
+                    }
+                    values.clear();
+                    while(temp.compare("};")!=0)
+                    {
+                        values.push_back(temp);
+                        
+                        ss2>>temp;
+                    }
+                    Graph_Node new_node(name,values.size(),values);
+                    int pos=Alarm.addNode(new_node);
 
-     				
-     		}
-     		else if(temp.compare("probability")==0)
-     		{
                     
-     				ss>>temp;
-     				ss>>temp;
-     				
+            }
+            else if(temp.compare("probability")==0)
+            {
+                    
+                    ss>>temp;
+                    ss>>temp;
+                    
                     list<Graph_Node>::iterator listIt;
                     list<Graph_Node>::iterator listIt1;
-     				listIt=Alarm.search_node(temp);
+                    listIt=Alarm.search_node(temp);
                     int index=Alarm.get_index(temp);
                     ss>>temp;
                     values.clear();
-     				while(temp.compare(")")!=0)
-     				{
+                    while(temp.compare(")")!=0)
+                    {
                         listIt1=Alarm.search_node(temp);
                         listIt1->add_child(index);
-     					values.push_back(temp);
-     					
-     					ss>>temp;
-
-    				}
-                    listIt->set_Parents(values);
-    				getline (myfile,line);
-     				stringstream ss2;
-                    
-     				ss2.str(line);
-     				ss2>> temp;
-                    
-     				ss2>> temp;
-                    
-     				vector<float> curr_CPT;
-                    string::size_type sz;
-     				while(temp.compare(";")!=0)
-     				{
+                        values.push_back(temp);
                         
-     					curr_CPT.push_back(atof(temp.c_str()));
-     					
-     					ss2>>temp;
+                        ss>>temp;
+
+                    }
+                    listIt->set_Parents(values);
+                    getline (myfile,line);
+                    stringstream ss2;
+                    
+                    ss2.str(line);
+                    ss2>> temp;
+                    
+                    ss2>> temp;
+                    
+                    vector<float> curr_CPT;
+                    string::size_type sz;
+                    while(temp.compare(";")!=0)
+                    {
+                        
+                        curr_CPT.push_back(atof(temp.c_str()));
+                        
+                        ss2>>temp;
                        
                         
 
-    				}
+                    }
                     
                     listIt->set_CPT(curr_CPT);
 
 
-     		}
+            }
             else
             {
                 
-            }	
-    		
-    	}
-    	
-    	if(find==1)
-    	myfile.close();
-  	}
-  	
-  	return Alarm;
+            }   
+            
+        }
+        
+        if(find==1)
+        myfile.close();
+    }
+    
+    return Alarm;
 }
 
 vector<int> get_roots(network Alarm){
@@ -927,25 +941,13 @@ void traverse_EM1(network& Alarm, vector<int> roots, vector<vector<string>> pati
 }
 
 
-float goalTest (network Alarm, network Alarm_old){
-
-    network vGraph1 = Alarm_old;    
- 
-    network vGraph2 = Alarm;    
+float goalTest (vector<float> CPT1, vector<float> CPT2){
 
     bool flag = true;
 
     float total_diff = 0;
 
     int flagBreak = 0;
-    for(int i=0; i<vGraph1.netSize(); i++){
-
-        Graph_Node g1 = *(vGraph1.get_nth_node(i));
-        Graph_Node g2 = *(vGraph2.get_nth_node(i));
-
-        vector<float> CPT1 = g1.get_CPT();
-        vector<float> CPT2 = g2.get_CPT();
-
         for(int j=0; j< CPT1.size(); j++){
             total_diff = total_diff + abs(CPT2[j] - CPT1[j]);
             // if (abs(CPT2[j] - CPT1[j]) > 0.0001){
@@ -961,7 +963,6 @@ float goalTest (network Alarm, network Alarm_old){
         //     break;
         // }
 
-    }
 
     return total_diff;
 }
@@ -988,13 +989,16 @@ int main()
 
 // DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
    
-    network Alarm_old = Alarm;
+    vector<float> old_CPT_list;
+    old_CPT_list = Alarm.find_all_CPT();
     int count = 0;
     float diff = 10;
     // cout<<count<<" total diff: "<< diff <<endl;
 
     while(diff>5 || (count == 0)){
-        Alarm_old = Alarm;
+        
+        old_CPT_list = Alarm.find_all_CPT();
+    
         count++;
 
         endt = clock();
@@ -1005,7 +1009,9 @@ int main()
 
         traverse_EM(Alarm,roots,patient_list);
         traverse_EM1(Alarm,roots,patient_list);
-        diff = goalTest(Alarm,Alarm_old);
+
+        new_CPT_list = Alarm.find_all_CPT();
+        diff = goalTest(old_CPT_list,new_CPT_list);
         cout<<count<<" total diff: "<< diff <<endl;
 
 
