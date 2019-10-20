@@ -350,9 +350,7 @@ int check_prob_val(vector<string> values, vector<int> index){
 int find_row(vector<int> entry, vector<Graph_Node> parents){
     int row = 0;
     int temp = 0;
-        // cout<<"parents \n";
-        //         for(int i=0; i<parents.size(); i++) cout<<parents[i].get_name()<<" ";
-
+       
     for(int i=0; i<entry.size(); i++){
         temp = entry[i];
         for(int j=i+1; j<entry.size(); j++){
@@ -368,42 +366,15 @@ void get_var_val(string s, vector<string> &var, vector<float> &val){
     string temp = "";
     float value=0;
     int start=0;
-    // try{
-    //     cout<<"Chu \n";
-    // for(int i=0; i<s.size(); i++){
-    //     if(s[i]==' '){
-    //         temp = s.substr(start,i);
-    //         start = i+3;
-    //         i = start;
-    //         while(s[i]!=' ')
-    //             i++;
-    //         if(s[start+1]!='.')
-    //             throw s.substr(start,i);
-    //         value = stof(s.substr(start,i));
-    //         var.push_back(temp);
-    //         cout<<temp<<endl;
-    //         val.push_back(value);
-    //         cout<<value<<endl;
-    //         start = i+1;
-    //     }
-    // }
-    // }catch(string ex){
-    //     cout<<"exception: "<<ex<<endl;
-    // }
-    // vector<string> result; 
-    // boost::split(result, input, boost::is_any_of("\t")); 
-    // return;
     vector<string> result; 
     stringstream check1(s); 
       
     string intermediate; 
       
-    // Tokenizing w.r.t. space ' ' 
     while(getline(check1, intermediate, ' ')) 
     { 
         result.push_back(intermediate); 
     } 
-    // cout<<"results \n";
     for(int i=0; i<result.size(); i+=3){
         var.push_back(result[i]);
         // cout<<result[i]<<endl;
@@ -456,9 +427,6 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
         bool flag = false;
         entry.clear();
         
-        // if(print)
-        // cout<<i<<" damn "<< patient_list[i][ind] <<endl;
-
         if(patient_list[i][ind].compare("\"?\"")==0){
             unknowns u;
             u.row =i; u.colm = ind;
@@ -466,11 +434,9 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             // cout<<"? found "<<patient_list[i][ind]<<endl;
             continue;
         }
-        // if(print)
-        // cout<<print<<" nice \n";
+
         int prob_val = check_prob_val(patient_list[i], parent_index);
         //////////////////////////////////// case when one of the parent had an unknown value
-        // if(!print && prob_val>=0) cout<<prob_val<<" here i am \n";
 
         if(prob_val>=0){
             // if(!print)
@@ -486,11 +452,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
                 entry.push_back(var_numb);
             }
             string s = patient_list[i][parent_index[prob_val]];
-            // cout<<"s: "<<s<<" \n";
-            // if(print){
-            //         for(int i=0; i<entry.size(); i++) cout<<entry[i];
-            //             cout<<"\n";
-            //     }
+      
             vector<string> values_list = parents[prob_val].get_values(); 
             vector<string> var;
             vector<float> val;
@@ -507,10 +469,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
                 y = get_index_val(gn.get_values(),patient_list[i][ind]);
                 cpt_values[x][y]+=val[i];
                 cpt_values[x][m]+=val[i];
-                // if(print){
-                //     for(int i=0; i<entry.size(); i++) cout<<entry[i];
-                //      cout<<"\n"<<x<<" "<<y<<" hiii 3\n";
-                // }
+        
                 it = entry.begin();
                 entry.erase(it+prob_val); 
 
@@ -531,9 +490,6 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             }
             x = find_row(entry, parents);
             y = get_index_val(gn.get_values(),patient_list[i][ind]);
-            // if(print) cout<<"x; "<<x<<"y; "<<y<<endl;
-            // cout<<gn.get_values()[0]<<endl;
-            // cout<<patient_list[i][ind]<<" "<<y <<endl;
             cpt_values[x][y]+=1;
            // cout<<cpt_values[x][y]<<endl;
             cpt_values[x][m]+=1;
@@ -564,9 +520,6 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
 
         }
     }
-
-    // if(diff_list((*Alarm.get_nth_node(ind)).get_CPT(),cpt_list))
-    //     cout<<ind<<" yoyoyoyo \n";
 
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
    // cout<<"set done \n";
@@ -812,10 +765,32 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
     return;
 }
 
+void initialise_randCPT(network &Alarm, int ind, vector<vector<string> > patient_list){
+    Graph_Node gn = *(Alarm.get_nth_node(ind));
+    int n = gn.get_nvalues();
+    vector<float> cpt_list = gn.get_CPT();
+    int m = cpt_list.size()/n;
+    float sum[m];
+
+    for(int i=0 ;i<m; i++)
+        sum[i] = 0;
+
+    int count=0;
+    for(int i=0; i<cpt_list.size(); i++){
+        cpt_list[i] = (rand() / double(RAND_MAX))*(1-sum[i%m]);
+        if(i%m==0) count++;
+        sum[i%m]+=cpt_list[i];
+    }
+    (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
+}
+
+
 
 void traverseIndex(network& Alarm, int index, vector<vector<string>> &patient_list){
 
+    // initialise_randCPT(Alarm,index,patient_list);
     find_cpt(Alarm,index,patient_list,true);
+
     //   cout<<"replace now\n";
     // DOUBT: Which graph node? IS this right?
     Graph_Node gn = *(Alarm.get_nth_node(index));
@@ -958,47 +933,6 @@ void traverse_EM1(network &Alarm, vector<int> roots, vector<vector<string>> pati
 
 }
 
-
-// float goalTest (network Alarm, network Alarm_old){
-
-//     network vGraph1 = Alarm_old;    
- 
-//     network vGraph2 = Alarm;    
-
-//     bool flag = true;
-
-//     float total_diff = 0;
-
-//     int flagBreak = 0;
-//     for(int i=0; i<vGraph1.netSize(); i++){
-
-//         Graph_Node g1 = *(vGraph1.get_nth_node(i));
-//         Graph_Node g2 = *(vGraph2.get_nth_node(i));
-
-//         vector<float> CPT1 = g1.get_CPT();
-//         vector<float> CPT2 = g2.get_CPT();
-
-//         for(int j=0; j< CPT1.size(); j++){
-//             total_diff = total_diff + abs(CPT2[j] - CPT1[j]);
-//             // if (abs(CPT2[j] - CPT1[j]) > 0.0001){
-
-//             //     flagBreak = 1;
-//             //     flag = false;
-//             //     break;
-//             // }
-
-//         }
-
-//         // if (flagBreak == 1) {
-//         //     break;
-//         // }
-
-//     }
-
-//     return total_diff;
-// }
-
-
 void write_file(string file_read, string file_write, network Alarm){
     fstream file;
     string word = "";
@@ -1058,58 +992,6 @@ void write_file_pat(string file_write, vector<vector<string> > l){
     return;
 }
 
-// int main()
-// {
-//       clock_t startt,endt;
-//       startt=clock();
-
-//     string filename = "records.dat";
-//     patient_list = read_file(filename);
-    
-//     network Alarm;
-//     Alarm=read_network();
-    
-//     vector<int> roots;
-
-//     roots = get_roots(Alarm);
-//     vector<vector<string> > patient_list_copy = patient_list;
-      
-// // The first traversal, storing the CPT valuess : Assumed to be working fine!
-//     traverse(Alarm,roots,patient_list_copy);
-//     write_file("alarm.bif", "solved_alarm.bif", Alarm);
-// // DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
-   
-//     // network Alarm_old = Alarm;
-//     // int count = 0;
-//     // float diff = 10;
-//     // // cout<<count<<" total diff: "<< diff <<endl;
-
-//     // while(diff>5 || (count == 0)){
-//     //     Alarm_old = Alarm;
-//     //     count++;
-
-//     //     endt = clock();
-//     //     if ((((endt - startt)/1000)/1000) >= ((2 * 60) -1)){
-        
-//     //         break;
-//     //     } 
-
-//     //     traverse_EM(Alarm,roots,patient_list);
-//     //     traverse_EM1(Alarm,roots,patient_list);
-//     //     diff = goalTest(Alarm,Alarm_old);
-//     //     cout<<count<<" total diff: "<< diff <<endl;
-
-
-//     // }
-
-    
-//     return 0;
-// }
-
-
-// "low = 0.4 medium = 0.3 high = 0.3"
-
-
 float goalTest (vector<float> CPT1, vector<float> CPT2){
 
     bool flag = true;
@@ -1141,6 +1023,7 @@ int main()
 {
       clock_t startt,endt;
       startt=clock();
+      srand (time(NULL));
 
     string filename = "records.dat";
     patient_list = read_file(filename);
@@ -1191,7 +1074,7 @@ int main()
 
         diff = goalTest(old_CPT_list,new_CPT_list);
         cout<<count<<" total diff: "<< diff <<endl;
-        write_file("alarm.bif", "solved_alarm.bif", Alarm);
+        write_file("alarm.bif", "solved_alarm2.bif", Alarm);
 
 
     }
