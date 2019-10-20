@@ -356,7 +356,7 @@ int find_row(vector<int> entry, vector<Graph_Node> parents){
 
 void get_var_val(string s, vector<string> &var, vector<float> &val){
     string temp = "";
-    float value=0;
+    float value=0.0;
     int start=0;
     vector<string> result; 
     stringstream check1(s); 
@@ -489,10 +489,10 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             if(cpt_values[j][m]>0)
                 d = (cpt_values[j][i])/(cpt_values[j][m]);
             if(d==1){
-                d = d-0.00001;    
+                d = d-0.0002;    
             }
             if(d==0){
-                d = d+0.00001;
+                d = d+0.0002;
             }
             cpt_list.push_back(d);
 
@@ -701,7 +701,7 @@ void initialise_randCPT(network &Alarm, int ind, vector<vector<string> > patient
     float sum[m];
 
     for(int i=0 ;i<m; i++)
-        sum[i] = 0;
+        sum[i] = 0.0;
 
     int count=0;
     for(int i=0; i<cpt_list.size(); i++){
@@ -906,7 +906,7 @@ float goalTest (vector<float> CPT1, vector<float> CPT2){
 
     bool flag = true;
 
-    float total_diff = 0;
+    float total_diff = 0.0;
 
     int flagBreak = 0;
         for(int j=0; j< CPT1.size(); j++){
@@ -942,7 +942,7 @@ int main()
 
     old_CPT_list = Alarm.find_all_CPT();
     int count = 0;
-    float diff = 10;
+    float diff = 10.0;
 
     while(true){
         
