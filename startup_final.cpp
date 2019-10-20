@@ -522,12 +522,12 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             if(cpt_values[j][m]>0)
                 d = (cpt_values[j][i])/(cpt_values[j][m]);
             // if(j==0) cout<<cpt_values[j][i]<<"   ";
-            // if(d==1){
-            //     d = d-0.0002;    
-            // }
-            // if(d==0){
-            //     d = d+0.0002;
-            // }
+            if(d==1){
+                d = d-0.00001;    
+            }
+            if(d==0){
+                d = d+0.00001;
+            }
             //if(print)
             // cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;  //CHNAGE!!
             // if(print)
@@ -637,7 +637,7 @@ vector<vector<string> > read_file(string filename){
 
 string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, vector<Graph_Node> parents, vector<int> parent_index){
     float prob[gn.get_nvalues()];
-    float temp=1;
+    float temp=1.0;
 
     // for(int i=0; i<parents.size(); i++){
     //     vector<int> entry;
@@ -675,7 +675,7 @@ string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, 
     }
 
     for(int k=0; k<gn.get_nvalues(); k++){
-        float p = 1;
+        float p = 1.0;
          
         for(int i=0; i<children.size(); i++){
             vector<int> entry;
@@ -723,9 +723,9 @@ string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, 
         int index_found = x + (y*rows);
         p = p * gn.get_CPT()[index_found];
 
-        prob[k] = temp*p;
+        prob[k] = p;
     }
-    float sum = 0;
+    float sum = 0.0;
     for(int i=0; i<gn.get_nvalues(); i++)
         sum = sum+prob[i];
 
@@ -1058,7 +1058,7 @@ int main()
       
 // The first traversal, storing the CPT valuess : Assumed to be working fine!
     traverse(Alarm,roots,patient_list);
-    write_file("alarm.bif", "solved_alarm.bif", Alarm);
+    write_file("alarm.bif", "solved_alarm1.bif", Alarm);
         // write_file_pat("pat.txt", patient_list);
 // DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
    
@@ -1074,34 +1074,34 @@ int main()
     float diff = 10;
     // cout<<count<<" total diff: "<< diff <<endl;
 
-    // while(true){
+    while(true){
         
-    //     old_CPT_list = Alarm.find_all_CPT();
-    //     // cout<<old_CPT_list[0]<<" "<<old_CPT_list[1]<<" "<<old_CPT_list[2]<<" "<<old_CPT_list[3]<<" "<<old_CPT_list[4]<<" \n";
-    //     // write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
+        old_CPT_list = Alarm.find_all_CPT();
+        // cout<<old_CPT_list[0]<<" "<<old_CPT_list[1]<<" "<<old_CPT_list[2]<<" "<<old_CPT_list[3]<<" "<<old_CPT_list[4]<<" \n";
+        // write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
         
-    //     count++;
+        count++;
 
-    //     endt = clock();
-    //     if ((((endt - startt)/1000)/1000) >= ((2 * 60) -1)){
+        endt = clock();
+        if ((((endt - startt)/1000)/1000) >= ((2 * 60) -1)){
         
-    //         break;
-    //     } 
+            break;
+        } 
 
-    //     traverse_EM(Alarm,roots,patient_list);
-    //     // write_file_pat("pat"+to_string(count) +".txt", patient_list);
+        traverse_EM(Alarm,roots,patient_list);
+        // write_file_pat("pat"+to_string(count) +".txt", patient_list);
 
-    //     traverse_EM1(Alarm,roots,patient_list);
+        traverse_EM1(Alarm,roots,patient_list);
 
-    //     new_CPT_list = Alarm.find_all_CPT();
-    //     // cout<<new_CPT_list[0]<<" "<<new_CPT_list[1]<<" "<<new_CPT_list[2]<<" "<<new_CPT_list[3]<<" "<<new_CPT_list[4]<<" \n";
+        new_CPT_list = Alarm.find_all_CPT();
+        // cout<<new_CPT_list[0]<<" "<<new_CPT_list[1]<<" "<<new_CPT_list[2]<<" "<<new_CPT_list[3]<<" "<<new_CPT_list[4]<<" \n";
 
-    //     diff = goalTest(old_CPT_list,new_CPT_list);
-    //     cout<<count<<" total diff: "<< diff <<endl;
-    //     write_file("alarm.bif", "solved_alarm2.bif", Alarm);
+        diff = goalTest(old_CPT_list,new_CPT_list);
+        cout<<count<<" total diff: "<< diff <<endl;
+        write_file("alarm.bif", "solved_alarm1.bif", Alarm);
 
 
-    // }
+    }
     
     return 0;
 }
