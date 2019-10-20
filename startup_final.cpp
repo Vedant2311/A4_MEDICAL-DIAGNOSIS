@@ -188,7 +188,7 @@ public:
 
 };
 
-network read_network(String s_name)
+network read_network(string s_name)
 {
     network Alarm;
     string line;
@@ -488,11 +488,11 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             float d=0.0;
             if(cpt_values[j][m]>0)
                 d = (cpt_values[j][i])/(cpt_values[j][m]);
-            if(d==1){
+            if(d>0.999999){
                 d = d-0.0001;    
             }
-            if(d==0){
-                d = d+0.0001;
+            if(d<0.000001){
+                d = 0.0001;
             }
             cpt_list.push_back(d);
 
