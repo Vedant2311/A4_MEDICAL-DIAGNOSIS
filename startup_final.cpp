@@ -188,12 +188,12 @@ public:
 
 };
 
-network read_network()
+network read_network(String s_name)
 {
     network Alarm;
     string line;
     int find=0;
-    ifstream myfile("alarm.bif"); 
+    ifstream myfile(s_name); 
     string temp;
     string name;
     vector<string> values;
@@ -489,10 +489,10 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             if(cpt_values[j][m]>0)
                 d = (cpt_values[j][i])/(cpt_values[j][m]);
             if(d==1){
-                d = d-0.0002;    
+                d = d-0.0001;    
             }
             if(d==0){
-                d = d+0.0002;
+                d = d+0.0001;
             }
             cpt_list.push_back(d);
 
@@ -919,23 +919,30 @@ float goalTest (vector<float> CPT1, vector<float> CPT2){
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
     clock_t startt,endt;
     startt=clock();
     srand (time(NULL));
 
-    string filename = "records.dat";
-    patient_list = read_file(filename);
+     if(argc<3){//##Make .sh files
+    cout<<"Argumnents Missing"<<endl;
+    return 0;
+  }
+  /*---------Vars--------*///##Make Gobal if needed
+  string ifilename = argv[1];
+  string ofilename = argv[2];
+ 
+    patient_list = read_file(ofilename);
     
     network Alarm;
-    Alarm=read_network();
+    Alarm=read_network(ifilename);
     
     vector<int> roots;
 
     roots = get_roots(Alarm);
     traverse(Alarm,roots,patient_list);
-    write_file("alarm.bif", "solved_alarm1.bif", Alarm);
+    write_file("alarm.bif", "solved_alarm.bif", Alarm);
 
     vector<float> old_CPT_list;
     vector<float> new_CPT_list;
@@ -964,7 +971,7 @@ int main()
 
         diff = goalTest(old_CPT_list,new_CPT_list);
         cout<<count<<" total diff: "<< diff <<endl;
-        write_file("alarm.bif", "solved_alarm1.bif", Alarm);
+        write_file("alarm.bif", "solved_alarm.bif", Alarm);
 
 
     }
