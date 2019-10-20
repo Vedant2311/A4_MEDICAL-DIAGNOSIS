@@ -950,7 +950,7 @@ int main(int argc, char *argv[])
 
     roots = get_roots(Alarm);
     traverse(Alarm,roots,patient_list);
-    write_file("alarm.bif", "solved_alarm.bif", Alarm);
+    write_file(ifilename, "solved_alarm.bif", Alarm);
 
     vector<float> old_CPT_list;
     vector<float> new_CPT_list;
@@ -977,7 +977,7 @@ int main(int argc, char *argv[])
 
         new_CPT_list = Alarm.find_all_CPT();
 
-        write_file("alarm.bif", "solved_alarm.bif", Alarm);
+        write_file(ifilename, "solved_alarm.bif", Alarm);
 
 
     }
