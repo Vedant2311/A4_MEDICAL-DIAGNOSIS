@@ -488,11 +488,11 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             float d=0.0;
             if(cpt_values[j][m]>0)
                 d = (cpt_values[j][i])/(cpt_values[j][m]);
-            if(d>0.999999){
-                d = d-0.0001;    
+            if(d>0.999){
+                d = d-0.01;    
             }
-            if(d<0.000001){
-                d = 0.0001;
+            if(d<0.001){
+                d = d+0.01;
             }
             cpt_list.push_back(d);
 
@@ -647,11 +647,21 @@ string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, 
     for(int i=0; i<gn.get_nvalues(); i++)
         prob[i] = prob[i]/sum;
 
-    string input_s = "";
-    for(int k=0; k<gn.get_values().size(); k++){
-        input_s = input_s + gn.get_values()[k] + " = " + to_string(prob[k]) + " ";
+    float max=0.0;
+    int maxIndex=0;
+    for(int i=0; i<gn.get_nvalues(); i++){
+        if(prob[i]>max){
+            max = prob[i];
+            maxIndex = i;
+        }
     }
-    return input_s;
+        
+
+    // string input_s = "";
+    // for(int k=0; k<gn.get_values().size(); k++){
+    //     input_s = input_s + gn.get_values()[k] + " = " + to_string(prob[k]) + " ";
+    // }
+    return gn.get_values()[maxIndex];
 }
 
 void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
@@ -705,9 +715,10 @@ void initialise_randCPT(network &Alarm, int ind, vector<vector<string> > patient
 
     int count=0;
     for(int i=0; i<cpt_list.size(); i++){
-        cpt_list[i] = (rand() / double(RAND_MAX))*(1-sum[i%m]);
-        if(i%m==0) count++;
-        sum[i%m]+=cpt_list[i];
+        // cpt_list[i] = (rand() / double(RAND_MAX))*(1-sum[i%m]);
+        cpt_list[i] = 1/n;
+        // if(i%m==0) count++;
+        // sum[i%m]+=cpt_list[i];
     }
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
 }
@@ -720,7 +731,7 @@ void traverseIndex(network& Alarm, int index, vector<vector<string>> &patient_li
     find_cpt(Alarm,index,patient_list,true);
 
     Graph_Node gn = *(Alarm.get_nth_node(index));
-    replace_unknowns(Alarm, index, gn, patient_list, unknowns_list);
+    // replace_unknowns(Alarm, index, gn, patient_list, unknowns_list);
  
 
 }
@@ -902,22 +913,6 @@ void write_file_pat(string file_write, vector<vector<string> > l){
     return;
 }
 
-float goalTest (vector<float> CPT1, vector<float> CPT2){
-
-    bool flag = true;
-
-    float total_diff = 0.0;
-
-    int flagBreak = 0;
-        for(int j=0; j< CPT1.size(); j++){
-            total_diff = total_diff + abs(CPT2[j] - CPT1[j]);
-
-        }
-
-
-    return total_diff;
-}
-
 
 int main(int argc, char *argv[])
 {
@@ -969,8 +964,6 @@ int main(int argc, char *argv[])
 
         new_CPT_list = Alarm.find_all_CPT();
 
-        diff = goalTest(old_CPT_list,new_CPT_list);
-        cout<<count<<" total diff: "<< diff <<endl;
         write_file("alarm.bif", "solved_alarm.bif", Alarm);
 
 
