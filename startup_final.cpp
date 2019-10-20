@@ -443,7 +443,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             // cout<<"here1 \n";
             for(int j=0; j<parent_index.size(); j++){
                 if(j==prob_val)
-                    break;
+                    continue;
                 vector<string> values_list = parents[j].get_values();
                 int var_numb = get_index_val(values_list,patient_list[i][parent_index[j]]);
                 if(var_numb<0){
@@ -468,11 +468,10 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
                 x = find_row(entry, parents);
                 y = get_index_val(gn.get_values(),patient_list[i][ind]);
                 cpt_values[x][y]+=val[i];
-                cpt_values[x][m]+=val[i];
+                // cpt_values[x][m]+=val[i];
         
                 it = entry.begin();
                 entry.erase(it+prob_val); 
-
 
             }   
         }
@@ -490,36 +489,57 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
             }
             x = find_row(entry, parents);
             y = get_index_val(gn.get_values(),patient_list[i][ind]);
-            cpt_values[x][y]+=1;
-           // cout<<cpt_values[x][y]<<endl;
-            cpt_values[x][m]+=1;
+            cpt_values[x][y]+=1.0;
+            // cpt_values[x][m]+=1.0;
+            // if(print){
+            //     for(int i=0 ;i<entry.size(); i++)
+            //         cout<<entry[i]<<" ";
+            //     cout<<"\n";
+            //     for(int i=0 ;i<parents.size(); i++)
+            //         cout<<parents[i].get_nvalues()<<" ";
+            //     cout<<"\n";    
+            //     cout<<x<<endl;
+            //     cout<<y<<endl;
+            // }
         }
         
     }
 
+
+    for(int i=0; i<n; i++){
+        cpt_values[i][m]=0.0;
+        for (int j=0; j<m; j++)
+            cpt_values[i][m] = cpt_values[i][m] + cpt_values[i][j];
+    }
+
     vector<float> cpt_list;
+    float sum0=0;
     // if(print)
     // cout<<gn.get_name()<<endl;
     for(int i=0; i<m; i++){
         for(int j=0; j<n; j++){
-            float d=0;
+            float d=0.0;
             if(cpt_values[j][m]>0)
                 d = (cpt_values[j][i])/(cpt_values[j][m]);
-            if(d==1){
-                d = d-0.0002;    
-            }
-            if(d==0){
-                d = d+0.0002;
-            }
+            // if(j==0) cout<<cpt_values[j][i]<<"   ";
+            // if(d==1){
+            //     d = d-0.0002;    
+            // }
+            // if(d==0){
+            //     d = d+0.0002;
+            // }
             //if(print)
             // cout<<ind<<"entry no.: "<<i<<" d "<<d<<endl;  //CHNAGE!!
             // if(print)
             // cpt_list.push_back(0.5);
             // else 
+            // if(j==1) sum0 = sum0+d;
             cpt_list.push_back(d);
 
         }
+
     }
+    // cout<<"SUM0: "<<cpt_values[0][m]<<endl;
 
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
    // cout<<"set done \n";
@@ -1038,10 +1058,14 @@ int main()
       
 // The first traversal, storing the CPT valuess : Assumed to be working fine!
     traverse(Alarm,roots,patient_list);
-    // write_file("alarm.bif", "solved_alarm.bif", Alarm);
+    write_file("alarm.bif", "solved_alarm.bif", Alarm);
         // write_file_pat("pat.txt", patient_list);
 // DOUBT: I don't know if Alarm_old is a pointer or a scalar - scalar
    
+    // for(int i=0;i<unknowns_list.size();i++){
+    //     cout << unknowns_list[i].row << " " << unknowns_list[i].colm << endl;
+    // }
+
     vector<float> old_CPT_list;
     vector<float> new_CPT_list;
 
@@ -1050,34 +1074,34 @@ int main()
     float diff = 10;
     // cout<<count<<" total diff: "<< diff <<endl;
 
-    while(true){
+    // while(true){
         
-        old_CPT_list = Alarm.find_all_CPT();
-        // cout<<old_CPT_list[0]<<" "<<old_CPT_list[1]<<" "<<old_CPT_list[2]<<" "<<old_CPT_list[3]<<" "<<old_CPT_list[4]<<" \n";
-        // write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
+    //     old_CPT_list = Alarm.find_all_CPT();
+    //     // cout<<old_CPT_list[0]<<" "<<old_CPT_list[1]<<" "<<old_CPT_list[2]<<" "<<old_CPT_list[3]<<" "<<old_CPT_list[4]<<" \n";
+    //     // write_file("alarm.bif", "solved_alarm"+to_string(count)+".bif", Alarm);
         
-        count++;
+    //     count++;
 
-        endt = clock();
-        if ((((endt - startt)/1000)/1000) >= ((2 * 60) -1)){
+    //     endt = clock();
+    //     if ((((endt - startt)/1000)/1000) >= ((2 * 60) -1)){
         
-            break;
-        } 
+    //         break;
+    //     } 
 
-        traverse_EM(Alarm,roots,patient_list);
-        // write_file_pat("pat"+to_string(count) +".txt", patient_list);
+    //     traverse_EM(Alarm,roots,patient_list);
+    //     // write_file_pat("pat"+to_string(count) +".txt", patient_list);
 
-        traverse_EM1(Alarm,roots,patient_list);
+    //     traverse_EM1(Alarm,roots,patient_list);
 
-        new_CPT_list = Alarm.find_all_CPT();
-        // cout<<new_CPT_list[0]<<" "<<new_CPT_list[1]<<" "<<new_CPT_list[2]<<" "<<new_CPT_list[3]<<" "<<new_CPT_list[4]<<" \n";
+    //     new_CPT_list = Alarm.find_all_CPT();
+    //     // cout<<new_CPT_list[0]<<" "<<new_CPT_list[1]<<" "<<new_CPT_list[2]<<" "<<new_CPT_list[3]<<" "<<new_CPT_list[4]<<" \n";
 
-        diff = goalTest(old_CPT_list,new_CPT_list);
-        cout<<count<<" total diff: "<< diff <<endl;
-        write_file("alarm.bif", "solved_alarm2.bif", Alarm);
+    //     diff = goalTest(old_CPT_list,new_CPT_list);
+    //     cout<<count<<" total diff: "<< diff <<endl;
+    //     write_file("alarm.bif", "solved_alarm2.bif", Alarm);
 
 
-    }
+    // }
     
     return 0;
 }
