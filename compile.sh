@@ -1,0 +1,1 @@
+g++ startup_final.cpp -o start -std=c++11
