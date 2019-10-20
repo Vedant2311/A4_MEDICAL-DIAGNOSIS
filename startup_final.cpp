@@ -546,11 +546,24 @@ void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<strin
             entry.push_back(var_numb);
         }
         int x = find_row(entry, parents);
+        float max=0.0;
+        int maxIndex=0;
+        // for(int i=0; i<gn.get_nvalues(); i++){
+        //     if(prob[i]>max){
+                // max = prob[i];
+                // maxIndex = i;
+        //     }
+        // }
+       
         string input_s="";
         for(int k=0; k<gn.get_values().size(); k++){
-            input_s = input_s + gn.get_values()[k] + " = " + to_string(cpt_list[(k*n)+x]) + " ";
+            if(cpt_list[(k*n)+x]>max){
+                max = cpt_list[(k*n)+x];
+                maxIndex = k;
+            }
+            // input_s = input_s + gn.get_values()[k] + " = " + to_string(cpt_list[(k*n)+x]) + " ";
         }
-        patient_list[row][ind] = input_s;
+        patient_list[row][ind] = gn.get_values()[maxIndex];
         start++;
     }
     return;
