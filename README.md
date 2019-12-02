@@ -7,4 +7,5 @@ Here, a **.bif** format is used for the representation of these Bayesian Network
 The input data will be given by the records.dat file. The output will be the result of learning each probability value in the conditional probability tables. In other words, replaces all -1s with a probability value upto four decimal places. Thus, the output is a complete alarm.bif network
 
 Compile the code by **./compile.sh** and run the code as **./run.sh alarm.bif <sample_data>.dat** 
+
 The output will be in the file **solved_alarm.bif**
