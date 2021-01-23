@@ -1,3 +1,4 @@
+// A dummy file to test the reading of input files
 #include <iostream>
 #include <string.h>
 #include <fstream>
@@ -32,8 +33,6 @@ vector<vector<string> > read_file(string filename){
     } 
     return patient_list;
 }
-
-
 
 int main()
 {
