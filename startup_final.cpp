@@ -35,46 +35,52 @@ public:
     Graph_Node(string name,int n,vector<string> vals)       //n - size of value set
     {
         Node_Name=name;
-    
         nvalues=n;
         values=vals;
-        
-
     }
+    
     string get_name()
     {
         return Node_Name;
     }
+    
     vector<int> get_children()
     {
         return Children;
     }
+    
     vector<string> get_Parents()
     {
         return Parents;
     }
+    
     vector<float> get_CPT()
     {
         return CPT;
     }
+    
     int get_nvalues()
     {
         return nvalues;
     }
+    
     vector<string> get_values()
     {
         return values;
     }
+    
     void set_CPT(vector<float> new_CPT)
     {
         CPT.clear();
         CPT=new_CPT;
     }
+    
     void set_Parents(vector<string> Parent_Nodes)
     {
         Parents.clear();
         Parents=Parent_Nodes;
     }
+    
     // add another node in a graph as a child of this node
     int add_child(int new_child_index )
     {
@@ -86,33 +92,25 @@ public:
         Children.push_back(new_child_index);
         return 1;
     }
-
-
-
 };
 
 
- // The whole network represted as a list of nodes
+// The whole network represted as a list of nodes
 class network{
-
-
-    
 public:
 
     list <Graph_Node> Pres_Graph;
-
-
     int addNode(Graph_Node node)
     {
         Pres_Graph.push_back(node);
         return 0;
     }
-    
-    
+   
     int netSize()
     {
         return Pres_Graph.size();
     }
+    
     // get the index of node with a given name
     int get_index(string val_name)
     {
@@ -126,7 +124,8 @@ public:
         }
         return -1;
     }
-// get the node at nth index
+    
+    // get the node at nth index
     list<Graph_Node>::iterator get_nth_node(int n)
     {
        list<Graph_Node>::iterator listIt;
@@ -139,6 +138,7 @@ public:
         }
         return listIt; 
     }
+    
     //get the iterator of a node with a given name
     list<Graph_Node>::iterator search_node(string val_name)
     {
@@ -149,10 +149,11 @@ public:
                 return listIt;
         }
     
-            cout<<"node not found\n";
+        cout<<"node not found\n";
         return listIt;
     }
-
+    
+    // Search the index for a given string in our list
     int search_index(string val_name)
     {
         list<Graph_Node>::iterator listIt;
@@ -164,12 +165,12 @@ public:
             index++;
         }
     
-            cout<<"node not found\n";
+        cout<<"node not found\n";
         return -1;
     }
 
+    // Gets all the conditional Probability Tables
     vector<float> find_all_CPT(){
-
         vector<float> res;
         list<Graph_Node>::iterator listIt;
         for(listIt=Pres_Graph.begin();listIt!=Pres_Graph.end();listIt++)
@@ -179,15 +180,11 @@ public:
         }
     
         return res;
-
-
     }
-
-
-    
 
 };
 
+// Reading the Network from the given file
 network read_network(string s_name)
 {
     network Alarm;
@@ -198,32 +195,27 @@ network read_network(string s_name)
     string name;
     vector<string> values;
     
+    // Parsing the given input file in the DS that we just created
     if (myfile.is_open())
     {
         while (! myfile.eof() )
         {
             stringstream ss;
             getline (myfile,line);
-            
-            
+
             ss.str(line);
             ss>>temp;
             
-            
             if(temp.compare("variable")==0)
-            {
-                    
+            {                    
                     ss>>name;
                     getline (myfile,line);
                    
                     stringstream ss2;
                     ss2.str(line);
                     for(int i=0;i<4;i++)
-                    {
-                        
+                    {           
                         ss2>>temp;
-                        
-                        
                     }
                     values.clear();
                     while(temp.compare("};")!=0)
@@ -233,13 +225,10 @@ network read_network(string s_name)
                         ss2>>temp;
                     }
                     Graph_Node new_node(name,values.size(),values);
-                    int pos=Alarm.addNode(new_node);
-
-                    
+                    int pos=Alarm.addNode(new_node);                    
             }
             else if(temp.compare("probability")==0)
-            {
-                    
+            {                    
                     ss>>temp;
                     ss>>temp;
                     
@@ -270,23 +259,17 @@ network read_network(string s_name)
                     vector<float> curr_CPT;
                     string::size_type sz;
                     while(temp.compare(";")!=0)
-                    {
-                        
-                        curr_CPT.push_back(atof(temp.c_str()));
-                        
+                    {                        
+                        curr_CPT.push_back(atof(temp.c_str()));                        
                         ss2>>temp;
-                       
-                        
-
                     }
                     
                     listIt->set_CPT(curr_CPT);
 
-
             }
             else
             {
-                
+                // Do nothing
             }   
             
         }
@@ -382,7 +365,7 @@ bool diff_list(vector<float> v1, vector<float> v2){
     return false;
 }
 
-
+// Getting the CPT values for the Alarm network
 void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, bool print){
 
     list<Graph_Node>::iterator it = Alarm.get_nth_node(ind);
@@ -503,6 +486,7 @@ void find_cpt(network &Alarm, int ind, vector<vector<string> > patient_list, boo
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
 }
 
+// Replacing the Unkowns present in the Network
 void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
     visited.push_back(gn.get_name());
     vector<float> cpt_list = gn.get_CPT();
@@ -548,12 +532,6 @@ void replace_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<strin
         int x = find_row(entry, parents);
         float max=0.0;
         int maxIndex=0;
-        // for(int i=0; i<gn.get_nvalues(); i++){
-        //     if(prob[i]>max){
-                // max = prob[i];
-                // maxIndex = i;
-        //     }
-        // }
        
         string input_s="";
         for(int k=0; k<gn.get_values().size(); k++){
@@ -591,6 +569,7 @@ vector<vector<string> > read_file(string filename){
     return patient_list;
 }
 
+// CPT computations corresponding to the Markov Blanket for the given graph node.
 string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, vector<Graph_Node> parents, vector<int> parent_index){
     float prob[gn.get_nvalues()];
     float temp=1.0;
@@ -668,15 +647,11 @@ string find_CPTmarkov(network Alarm, vector<string> patient_val, Graph_Node gn, 
             maxIndex = i;
         }
     }
-        
 
-    // string input_s = "";
-    // for(int k=0; k<gn.get_values().size(); k++){
-    //     input_s = input_s + gn.get_values()[k] + " = " + to_string(prob[k]) + " ";
-    // }
     return gn.get_values()[maxIndex];
 }
 
+// Updating the Unknowns.
 void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string> > &patient_list, vector<unknowns> unknowns_list){
 
     vector<string> parent_str = gn.get_Parents();
@@ -692,8 +667,6 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
         parent_index.push_back(Alarm.search_index((*temp).get_name()));
         n = n*((*temp).get_nvalues());
     }
-
-    // WORK: Your code seems too complicated to understand lol. That encoding to get the corresponding variable CPT values. I got a way of doing this. I will tell you when we meet tomorrow
 
     int start = 0;
     while(start<unknowns_list.size()){
@@ -716,6 +689,7 @@ void update_unknowns(network Alarm, int ind, Graph_Node gn, vector<vector<string
     return;
 }
 
+// Random CPT initialisation.
 void initialise_randCPT(network &Alarm, int ind, vector<vector<string> > patient_list){
     Graph_Node gn = *(Alarm.get_nth_node(ind));
     int n = gn.get_nvalues();
@@ -736,19 +710,16 @@ void initialise_randCPT(network &Alarm, int ind, vector<vector<string> > patient
     (*Alarm.get_nth_node(ind)).set_CPT(cpt_list);
 }
 
-
-
+// Traverse corresponding to the node index
 void traverseIndex(network& Alarm, int index, vector<vector<string>> &patient_list){
-
     // initialise_randCPT(Alarm,index,patient_list);
     find_cpt(Alarm,index,patient_list,true);
 
     Graph_Node gn = *(Alarm.get_nth_node(index));
     // replace_unknowns(Alarm, index, gn, patient_list, unknowns_list);
- 
-
 }
 
+// Traverse the Entire Network
 void traverse(network& Alarm, vector<int> roots, vector<vector<string>> &patient_list){
 
     vector<int> newChild;
@@ -789,26 +760,23 @@ void traverse(network& Alarm, vector<int> roots, vector<vector<string>> &patient
                 if (it1 == newRoot.end()){
                     newRoot.push_back(newChild[i]);
                 }
-
         }
 
     }
-
-     traverse(Alarm,newRoot,patient_list);
     
-
-
+    traverse(Alarm,newRoot,patient_list);
+    
 }
 
-
+// EM traversal corresponding to a graph node index
 void traverseIndex_EM(network Alarm, int index, vector<vector<string>> &patient_list){
-
 
     Graph_Node gn = *(Alarm.get_nth_node(index));
     update_unknowns(Alarm, index, gn, patient_list, unknowns_list);
 
 }
 
+// EM learning traversal for the entire graph
 void traverse_EM(network Alarm, vector<int> roots, vector<vector<string>> &patient_list){
 
     vector<int> newChild;
@@ -833,17 +801,14 @@ void traverse_EM(network Alarm, vector<int> roots, vector<vector<string>> &patie
     else{
         traverse_EM(Alarm,newRoot,patient_list);
     }
-
-
 }
 
+// Getting the CPT values for the graph node of the given index after the EM traversal
 void traverseIndex_EM1(network &Alarm, int index, vector<vector<string>> patient_list){
-
   find_cpt(Alarm,index,patient_list,false);
-
 }
 
-
+// Getting the CPT values for the entire graph after the EM traversal
 void traverse_EM1(network &Alarm, vector<int> roots, vector<vector<string>> patient_list){
 
     vector<int> newChild;
@@ -872,6 +837,7 @@ void traverse_EM1(network &Alarm, vector<int> roots, vector<vector<string>> pati
 
 }
 
+// Writing to the file
 void write_file(string file_read, string file_write, network Alarm){
     fstream file;
     string word = "";
@@ -926,29 +892,31 @@ void write_file_pat(string file_write, vector<vector<string> > l){
     return;
 }
 
-
+// The main function for the code
 int main(int argc, char *argv[])
 {
     clock_t startt,endt;
     startt=clock();
     srand (time(NULL));
 
-     if(argc<3){//##Make .sh files
-    cout<<"Argumnents Missing"<<endl;
-    return 0;
-  }
-  /*---------Vars--------*///##Make Gobal if needed
-  string ifilename = argv[1];
-  string ofilename = argv[2];
+    if(argc<3){//##Make .sh files
+        cout<<"Argumnents Missing"<<endl;
+        return 0;
+    }
+
+    string ifilename = argv[1];
+    string ofilename = argv[2];
  
+    // Reading the data and the bayes net files
     patient_list = read_file(ofilename);
-    
     network Alarm;
     Alarm=read_network(ifilename);
     
     vector<int> roots;
 
     roots = get_roots(Alarm);
+    
+    // Traversing the entire graph initially and writing the first estimate of parameters to the file
     traverse(Alarm,roots,patient_list);
     write_file(ifilename, "solved_alarm.bif", Alarm);
 
@@ -959,27 +927,21 @@ int main(int argc, char *argv[])
     int count = 0;
     float diff = 10.0;
 
+    // Letting the EM learning algorithm for a fixed amount of time and writing each update to the file
     while(true){
         
         old_CPT_list = Alarm.find_all_CPT();
-        
         count++;
 
         endt = clock();
         if ((((endt - startt)/1000)/1000) >= ((2 * 60) -1)){
-        
             break;
         } 
 
         traverse_EM(Alarm,roots,patient_list);
-
         traverse_EM1(Alarm,roots,patient_list);
-
         new_CPT_list = Alarm.find_all_CPT();
-
         write_file(ifilename, "solved_alarm.bif", Alarm);
-
-
     }
     
     return 0;
